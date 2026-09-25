@@ -10,8 +10,12 @@
     "dev": "node --watch server.js",
     "csv": "node scripts/export-csv.js"
   },
-  "engines": { "node": ">=18" },
+  "engines": {
+    "node": "22.x"
+  },
   "dependencies": {
+    "@upstash/redis": "^1.39.0",
+    "@vercel/functions": "^3.9.9",
     "dotenv": "^16.4.5",
     "express": "^5.2.1",
     "resend": "^6.29.0"

@@ -8,9 +8,12 @@ A small web app for Impact Analytics to shortlist London restaurants for a priva
 |------|------------|
 | `data/venues.json` | Venue data: website, emails (with source pages), phone, address, chef, speciality, signature dishes, menu, prices, private rooms, capacity, fit for 15 to 20, Instagram, photos |
 | `data/venues.csv` | The same data as a spreadsheet (`npm run csv` rebuilds it) |
-| `server.js` | Express server: venue API, Resend sending, outreach tracking, photo lookup |
+| `lib/app.js` | The API: venue list, Resend sending, outreach tracking, photo lookup |
+| `lib/store.js` | Storage: Upstash Redis when configured, JSON files otherwise |
+| `server.js` | Local server (`npm start`) |
+| `api/index.js`, `middleware.js`, `vercel.json` | Vercel function entry, password protection, routing |
 | `public/` | The web app (no build step) |
-| `data/outreach.json` | Created on first use. Stores status and history per venue (git-ignored) |
+| `data/outreach.json` | Local only. Stores status and history per venue (git-ignored); Vercel uses Redis |
 
 ## Run it
 
@@ -38,7 +41,7 @@ With no `RESEND_API_KEY` (or with `DRY_RUN=1`) the app runs in **dry run** mode.
 
 ### Photos
 
-Cover images come from `cover_image` / `photos` in `venues.json` if set. Otherwise the server reads the venue's own website (`og:image` plus large images) the first time the app loads, then caches the result for a week in `data/photos-cache.json`. To pin a specific photo, paste its URL into `cover_image`.
+Cover images come from `cover_image` / `photos` in `venues.json` if set. Otherwise the server reads the venue's own website (`og:image` plus large images) the first time the app loads, then caches the result for a week (in Redis, or `data/photos-cache.json` locally). To pin a specific photo, paste its URL into `cover_image`.
 
 ## Data notes
 
@@ -47,6 +50,21 @@ Cover images come from `cover_image` / `photos` in `venues.json` if set. Otherwi
 - **Alain Ducasse** lists a named private dining manager, so its RFP goes to both that person and the reservations inbox.
 - **Aulis** seats at most 12, so it cannot host 15 to 20. **Da Terra** and **Frog** need a buyout or exclusive hire for groups that size.
 
-## Deploy
+## Deploy to Vercel
 
-Any Node 18+ host works (Render, Railway, Fly.io, a VM). Set the same env vars. Outreach tracking lives in `data/outreach.json`, so use a host with a persistent disk, or swap `loadOutreach` / `updateOutreach` in `server.js` for a database.
+The repo is ready for Vercel: `public/` is served as static files, `api/index.js` runs the API as a serverless function, and `middleware.js` puts a password in front of everything.
+
+1. In Vercel, click **Add New → Project** and import `mon97-crypto/london-venue`. Keep the defaults (Framework preset: Other). `vercel.json` sets the rest.
+2. **Storage → Create → Upstash (Redis)** from the Vercel Marketplace, and connect it to the project. Choose the free plan. This adds `KV_REST_API_URL` and `KV_REST_API_TOKEN` automatically. Vercel's filesystem is read-only, so without Redis the app cannot save outreach tracking.
+3. **Settings → Environment Variables**, add:
+   - `APP_PASSWORD`: the password your team will type. Without it, anyone with the URL could send email from your Resend account.
+   - `RESEND_API_KEY`, `FROM_EMAIL`, `REPLY_TO` and optionally `BCC_EMAIL` (see Resend setup above).
+4. **Deployments → Redeploy** so the new variables take effect.
+
+When you open the site, the browser asks for a username and password. Any username works; the password is `APP_PASSWORD`.
+
+To deploy from your own terminal instead: `npm i -g vercel`, then `vercel` in the repo folder, then `vercel --prod`.
+
+## Other hosts
+
+Any Node 22 host works with `npm start` (Render, Railway, Fly.io, a VM). Set the same env vars. Without Redis variables, tracking is saved to `data/outreach.json`, so use a persistent disk.
