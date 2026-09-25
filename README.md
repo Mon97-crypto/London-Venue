@@ -36,6 +36,7 @@ npm start                 # http://localhost:3000
 - **Filters**: Michelin stars, guests to host (min and max, with a 15 to 20 shortcut) and max price per head.
 - **Details** shows the full venue profile, photos, outreach history, a status picker (Contacted, Replied, Shortlisted, Declined, Booked) and notes.
 - The **Gmail account** setting under *Customise email* picks which signed-in Google account opens the draft.
+- **Reset** (top right of the progress card) clears Contacted, Sent and status marks, notes and history for every venue, for everyone using the site. Favourites and cover photos are kept.
 - Press `/` to jump to search.
 
 Tracking is saved on the server (Upstash Redis on Vercel). If the server cannot save, for example before Redis is connected, changes are kept in your browser, a note appears in the progress card, and they are sent to the server on your next visit.

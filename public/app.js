@@ -77,6 +77,7 @@ const ICON = {
   check: '<path d="m5 12 4.5 4.5L19 7"/>',
   heart: '<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20Z"/>',
   send: '<path d="M21 3 10 14M21 3l-7 18-4-7-7-4Z"/>',
+  reset: '<path d="M4 12a8 8 0 1 0 2.4-5.7L4 8.6"/><path d="M4 4v4.6h4.6"/>',
   more: '<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',
 };
 const icon = (name) => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${ICON[name]}</svg>`;
@@ -193,13 +194,15 @@ function change(v, mutate) {
 }
 
 async function persist(v) {
-  const local = readJSON(LOCAL_KEY, {});
+  // Read the browser copy only after the request, so parallel saves don't overwrite each other.
   try {
     const r = await api(`/api/outreach/${encodeURIComponent(v.id)}`, { method: 'PUT', body: { entry: v.outreach } });
     v.outreach = { ...blankEntry(), ...r.outreach };
+    const local = readJSON(LOCAL_KEY, {});
     if (local[v.id]) { delete local[v.id]; writeJSON(LOCAL_KEY, local); }
     if (state.localOnly && !Object.keys(local).length) { state.localOnly = false; renderProgress(); }
   } catch {
+    const local = readJSON(LOCAL_KEY, {});
     local[v.id] = v.outreach;
     writeJSON(LOCAL_KEY, local);
     if (!state.localOnly) { state.localOnly = true; renderProgress(); }
@@ -358,7 +361,10 @@ function renderProgress() {
   if (!box.dataset.ready) {
     box.dataset.ready = '1';
     box.innerHTML = `
-      <div class="big"><span data-n="reached">0</span><small> / ${venues.length}</small></div>
+      <div class="progress-head">
+        <div class="big"><span data-n="reached">0</span><small> / ${venues.length}</small></div>
+        <button type="button" class="reset-btn" id="resetTracking" title="Clear contacted, sent and status marks">${icon('reset')}Reset</button>
+      </div>
       <div class="label">venues contacted · <span data-n="sent">0</span> marked sent</div>
       <div class="bar"><span></span></div>
       <div class="mini-stats">
@@ -821,6 +827,22 @@ function bulkAction(action, sel) {
     toast(`${sel.length} venues marked as sent`);
   }
 }
+
+// Reset: clears outreach progress for every venue but keeps favourites and cover photos.
+$('#progress').addEventListener('click', async (e) => {
+  if (!e.target.closest('#resetTracking')) return;
+  const touched = venues.filter((v) => v.outreach.status !== 'not_contacted' || v.outreach.sentAt || v.outreach.history.length);
+  if (!touched.length) return toast('Nothing to reset yet.');
+  if (!confirm(`Reset tracking for ${touched.length} venue${touched.length > 1 ? 's' : ''}?\n\nThis clears Contacted, Sent and status marks, notes and history for everyone using the site. Favourites and cover photos are kept.`)) return;
+  Object.assign(state, { queue: [] });
+  await Promise.all(touched.map((v) => change(v, (en) => {
+    en.status = 'not_contacted';
+    en.history = [];
+    delete en.sentAt;
+    delete en.lastContactedAt;
+  })));
+  toast(`Tracking reset for ${touched.length} venue${touched.length > 1 ? 's' : ''}`);
+});
 
 $('#bulkToggle').addEventListener('click', () => {
   state.bulkMode = !(state.bulkMode || state.selected.size);

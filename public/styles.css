@@ -311,3 +311,7 @@ body.has-bulk .toast { bottom: 130px; }
 .bulk-close:hover { background: rgba(255, 255, 255, .25); }
 #bulkToggle[aria-pressed=true] { background: var(--ink); }
 .toolbar-wrap.expanded { position: static; }
+.progress-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.reset-btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(255, 255, 255, .35); background: rgba(255, 255, 255, .08); color: #fff; border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 500; cursor: pointer; transition: background .15s; }
+.reset-btn:hover { background: rgba(255, 255, 255, .2); }
+.reset-btn .i { width: 14px; height: 14px; }
