@@ -3,69 +3,86 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>London Venue RFPs</title>
+  <title>London Venue Shortlist</title>
   <link rel="icon" href="favicon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=Spectral:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=Spectral:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <header class="topbar">
     <div class="wrap topbar-inner">
       <img src="ia-logo.png" alt="Impact Analytics" class="logo">
-      <button class="btn ghost" id="settingsBtn" type="button">Event details &amp; template</button>
+      <button class="btn ghost sm" id="settingsBtn" type="button">
+        <svg class="i" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        Customise email
+      </button>
     </div>
   </header>
 
-  <main class="wrap">
-    <section class="hero">
-      <p class="eyebrow">Private event · 15 to 20 guests · London</p>
-      <h1>Venue <em>shortlist</em></h1>
-      <p class="lede">Open a prefilled RFP in Gmail in one click and see who you have already contacted.</p>
-    </section>
+  <section class="hero">
+    <div class="wrap hero-inner">
+      <div class="hero-copy">
+        <p class="eyebrow light">Impact Analytics · Private dinner · 15 to 20 guests</p>
+        <h1>Where shall we host <em>dinner?</em></h1>
+        <p class="lede">Eleven of London's finest dining rooms. Open a ready-to-send enquiry in Gmail with one click, then track every reply here.</p>
+      </div>
+      <div class="progress-card" id="progress" aria-live="polite"></div>
+    </div>
+  </section>
 
-    <section class="stats" id="stats" aria-label="Outreach summary"></section>
-
-    <section class="toolbar">
-      <input type="search" id="search" placeholder="Search venues, areas, cuisine" aria-label="Search venues">
+  <div class="toolbar-wrap">
+    <div class="wrap toolbar">
+      <label class="search">
+        <svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="search" id="search" placeholder="Search by name, area, cuisine or chef" aria-label="Search venues">
+      </label>
       <div class="chips" id="statusFilter" role="tablist" aria-label="Filter by status"></div>
-    </section>
+    </div>
+  </div>
 
+  <main class="wrap">
     <section class="grid" id="grid" aria-live="polite"></section>
   </main>
 
+  <footer class="wrap foot">
+    Emails open in Gmail for you to review and send. Venue details come from each restaurant's official website.
+  </footer>
+
   <!-- Venue details -->
-  <dialog id="detailDlg" class="dlg wide">
-    <div class="dlg-body" id="detailBody"></div>
+  <dialog id="detailDlg" class="sheet">
+    <div id="detailBody"></div>
   </dialog>
 
-  <!-- Settings -->
-  <dialog id="settingsDlg" class="dlg wide">
+  <!-- Email settings (optional) -->
+  <dialog id="settingsDlg" class="dlg">
     <form method="dialog" class="dlg-body" id="settingsForm">
       <header class="dlg-head">
         <div>
-          <p class="eyebrow">Used in every RFP</p>
-          <h2>Event details &amp; template</h2>
+          <p class="eyebrow">Optional · saved in this browser</p>
+          <h2>Customise the email</h2>
         </div>
-        <button class="icon-btn" value="cancel" aria-label="Close">✕</button>
+        <button class="icon-btn" value="cancel" aria-label="Close">
+          <svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
       </header>
+      <p class="hint">Everything here is optional. Blank fields fall back to sensible wording, so the Gmail button always works.</p>
       <div class="form-grid">
-        <label>Your name <input name="senderName"></label>
+        <label>Your name <input name="senderName" placeholder="Impact Analytics Events Team"></label>
         <label>Your title <input name="senderTitle"></label>
         <label>Phone <input name="senderPhone"></label>
         <label>Gmail account to send from <input name="gmailAccount" type="email" placeholder="you@impactanalytics.co"></label>
         <label>Guest count <input name="guests"></label>
         <label>Preferred date <input name="date" placeholder="e.g. Thursday 12 November 2026"></label>
-        <label>Alternative dates <input name="altDates"></label>
-        <label>Timing <input name="timing" placeholder="e.g. 7pm to 11pm"></label>
+        <label>Timing <input name="timing"></label>
         <label>Budget per head <input name="budget" placeholder="e.g. £150 to £250 incl. drinks"></label>
       </div>
-      <label>Subject template <input name="subject"></label>
-      <label>Body template <textarea name="body" rows="14"></textarea></label>
-      <p class="hint">Placeholders: {{venue}} {{room}} {{guests}} {{date}} {{altDates}} {{timing}} {{budget}} {{senderName}} {{senderTitle}} {{senderPhone}}</p>
+      <label>Subject <input name="subject"></label>
+      <label>Message <textarea name="body" rows="12"></textarea></label>
+      <p class="hint">Placeholders: {{venue}} {{room}} {{guests}} {{date}} {{timing}} {{budget}} {{senderName}} {{senderTitle}} {{senderPhone}}</p>
       <footer class="dlg-foot">
-        <button class="btn ghost" type="button" id="resetTpl">Reset template</button>
+        <button class="btn ghost" type="button" id="resetTpl">Reset wording</button>
         <button class="btn primary" value="save">Save</button>
       </footer>
     </form>

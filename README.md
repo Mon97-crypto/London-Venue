@@ -24,7 +24,7 @@ npm start                 # http://localhost:3000
 
 ## Using the app
 
-- **Event details & template**: add your name, title, phone, the Gmail account to send from, preferred and alternative dates, timing and budget. Edit the subject and body template here. Placeholders such as `{{venue}}` and `{{room}}` are filled in per venue. These settings are stored in your browser.
+- **Customise email** (optional): add your name, title, phone, the Gmail account to send from, date, timing and budget. Blank fields fall back to neutral wording, so the Gmail button always works. Edit the subject and body template here. Placeholders such as `{{venue}}` and `{{room}}` are filled in per venue. These settings are stored in your browser.
 - **Email via Gmail** on a card opens a new Gmail tab with the recipient, subject and RFP body filled in. Review it and press Send in Gmail. The venue moves to *Contacted* and the draft is logged. The app cannot see whether you pressed Send, so if you close the draft, set the status back in Details.
 - The **Gmail account** setting picks which signed-in Google account opens the draft, useful if you are signed in to more than one.
 - **Details** shows the full venue profile, photos, outreach history and a status picker (Contacted, Replied, Shortlisted, Declined, Booked). Add notes such as phone calls.
@@ -32,7 +32,14 @@ npm start                 # http://localhost:3000
 
 ### Photos
 
-Cover images come from `cover_image` / `photos` in `venues.json` if set. Otherwise the server reads the venue's own website (`og:image` plus large images) the first time the app loads, then caches the result for a week (in Redis, or `data/photos-cache.json` locally). To pin a specific photo, paste its URL into `cover_image`.
+Each card tries these in order and shows the first photo that loads:
+
+1. A cover photo you paste in a venue's **Details → Cover photo** (saved for everyone).
+2. `cover_image` / `photos` in `venues.json`.
+3. Photos the server reads from the venue's own website (`og:image` plus large images), cached for a week.
+4. The website's share image through [Microlink](https://microlink.io), straight from the browser.
+
+If none loads, the card shows the venue's initials.
 
 ## Data notes
 
