@@ -4,7 +4,7 @@ import 'dotenv/config';
 import express from 'express';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import app, { DRY_RUN } from './lib/app.js';
+import app from './lib/app.js';
 import { isAuthorized, AUTH_CHALLENGE } from './lib/auth.js';
 import { storeKind } from './lib/store.js';
 
@@ -19,5 +19,5 @@ server.use(express.static(path.join(path.dirname(fileURLToPath(import.meta.url))
 server.use(app);
 
 server.listen(PORT, () => {
-  console.log(`London Venue RFP app on http://localhost:${PORT} (storage: ${storeKind}${DRY_RUN ? ', DRY RUN: emails are not sent' : ''})`);
+  console.log(`London Venue RFP app on http://localhost:${PORT} (storage: ${storeKind})`);
 });

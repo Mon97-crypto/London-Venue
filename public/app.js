@@ -11,6 +11,7 @@ const DEFAULT_SETTINGS = {
   senderName: '',
   senderTitle: '',
   senderPhone: '',
+  gmailAccount: '',
   guests: '15 to 20',
   date: '',
   altDates: '',
@@ -48,10 +49,8 @@ const SETTINGS_KEY = 'london-venue-settings-v1';
 const $ = (sel, root = document) => root.querySelector(sel);
 
 let venues = [];
-let config = { from: '', dryRun: false };
 let filter = 'all';
 let query = '';
-let composing = null;
 
 function loadSettings() {
   try {
@@ -189,7 +188,7 @@ function renderGrid() {
           ${v.outreach.lastContactedAt ? `<div class="last">Last emailed ${fmtDate(v.outreach.lastContactedAt)}</div>` : ''}
           <div class="card-actions">
             <button class="btn ghost sm" data-action="details">Details</button>
-            <button class="btn primary sm" data-action="compose">${st === 'not_contacted' ? 'Send RFP' : 'Send again'}</button>
+            <button class="btn primary sm" data-action="gmail">${st === 'not_contacted' ? 'Email via Gmail' : 'Email again'}</button>
           </div>
         </div>
       </article>`;
@@ -204,79 +203,44 @@ function render() {
   renderGrid();
 }
 
-/* ---------- Compose ---------- */
+/* ---------- Gmail ---------- */
 
-function openCompose(v) {
-  const s = loadSettings();
-  composing = v;
-  $('#composeVenue').textContent = v.name;
-  $('#cTo').value = recipientFor(v);
-  $('#cToHint').textContent = [
-    !recipientFor(v) && 'No published email. Paste the address once you have it.',
-    v.email_note,
-    v.email_general && !recipientFor(v).includes(v.email_general) && `General inbox: ${v.email_general}`,
-  ].filter(Boolean).join(' ');
-  $('#cSubject').value = fill(s.subject, v, s);
-  $('#cBody').value = fill(s.body, v, s);
-  $('#cFrom').textContent = config.from + (config.dryRun ? ' (dry run)' : '');
-  $('#cErr').textContent = '';
-  $('#cSend').disabled = false;
-  $('#composeDlg').showModal();
+function gmailUrl(v, s) {
+  const params = new URLSearchParams({
+    view: 'cm',
+    fs: '1',
+    to: recipientFor(v).replace(/\s+/g, ''),
+    su: fill(s.subject, v, s),
+    body: fill(s.body, v, s),
+  });
+  if (s.gmailAccount) params.set('authuser', s.gmailAccount);
+  return `https://mail.google.com/mail/?${params}`;
 }
 
-async function sendEmail(v, to, subject, body) {
-  const r = await api('/api/send', { method: 'POST', body: { venueId: v.id, to, subject, body } });
-  setOutreach(v.id, r.outreach);
-  return r;
-}
-
-$('#cSend').addEventListener('click', async () => {
-  const btn = $('#cSend');
-  btn.disabled = true;
-  btn.textContent = 'Sending…';
-  $('#cErr').textContent = '';
-  try {
-    const r = await sendEmail(composing, $('#cTo').value, $('#cSubject').value, $('#cBody').value);
-    $('#composeDlg').close();
-    toast(r.dryRun ? `Dry run: logged RFP to ${composing.name}` : `RFP sent to ${composing.name}`);
-    render();
-  } catch (e) {
-    $('#cErr').textContent = e.message;
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Send email';
-  }
-});
-
-$('#bulkBtn').addEventListener('click', async () => {
+// Opens a prefilled Gmail draft in a new tab and logs the venue as contacted.
+async function emailViaGmail(v) {
   const s = loadSettings();
-  const targets = venues.filter((v) => v.outreach.status === 'not_contacted' && recipientFor(v));
-  if (!targets.length) return toast('Every venue with an email has already been contacted.');
-  if (!s.senderName || !s.date) {
-    toast('Add your name and preferred date in Event details first.');
+  if (!s.senderName) {
+    toast('Add your name and event date under Event details first.');
     return openSettings();
   }
-  const names = targets.map((v) => v.name).join(', ');
-  if (!confirm(`Send the RFP template to ${targets.length} venues?\n\n${names}`)) return;
-  const btn = $('#bulkBtn');
-  btn.disabled = true;
-  let ok = 0;
-  const failed = [];
-  for (const v of targets) {
-    btn.textContent = `Sending ${ok + failed.length + 1}/${targets.length}…`;
-    try {
-      await sendEmail(v, recipientFor(v), fill(s.subject, v, s), fill(s.body, v, s));
-      ok++;
-    } catch (e) {
-      failed.push(`${v.name}: ${e.message}`);
-    }
-    await new Promise((r) => setTimeout(r, 600)); // stay under Resend's rate limit
+  // window.open must run before any await, or the browser blocks the pop-up.
+  const tab = window.open(gmailUrl(v, s), '_blank');
+  if (!tab) return toast('Your browser blocked the Gmail tab. Allow pop-ups for this site and try again.');
+  tab.opener = null;
+  if (!recipientFor(v)) toast(`${v.name} has no public email. Add the address in Gmail before sending.`);
+  try {
+    const r = await api(`/api/outreach/${encodeURIComponent(v.id)}`, {
+      method: 'POST',
+      body: { emailed: { to: recipientFor(v), subject: fill(s.subject, v, s) } },
+    });
+    setOutreach(v.id, r.outreach);
+    render();
+    if (recipientFor(v)) toast(`Gmail draft opened for ${v.name}. Marked as contacted.`);
+  } catch (e) {
+    toast(e.message);
   }
-  btn.disabled = false;
-  btn.textContent = 'Send to all not contacted';
-  render();
-  toast(`Sent ${ok} of ${targets.length}.${failed.length ? ' Failed: ' + failed.join('; ') : ''}`);
-});
+}
 
 /* ---------- Details ---------- */
 
@@ -288,7 +252,7 @@ function historyHtml(h) {
   if (!h.length) return '<p class="meta">No activity yet.</p>';
   return `<ul class="history">${[...h].reverse().map((e) => {
     let text = '';
-    if (e.type === 'email') text = `Emailed ${esc(e.to.join(', '))}: “${esc(e.subject)}”${e.dryRun ? ' (dry run)' : ''}`;
+    if (e.type === 'email') text = `Opened Gmail draft to ${esc([].concat(e.to).join(', ') || 'no address')}: “${esc(e.subject)}”`;
     else if (e.type === 'status') text = `Status changed to ${esc(STATUSES[e.to])}`;
     else text = esc(e.note);
     return `<li><time>${fmtDate(e.at)}</time>${text}</li>`;
@@ -329,7 +293,7 @@ function openDetails(v) {
       <label style="flex-direction:row;align-items:center;gap:8px">Status
         <select id="dStatus">${Object.entries(STATUSES).map(([k, l]) => `<option value="${k}" ${v.outreach.status === k ? 'selected' : ''}>${l}</option>`).join('')}</select>
       </label>
-      <button class="btn primary sm" id="dCompose">Send RFP</button>
+      <button class="btn primary sm" id="dCompose">Email via Gmail</button>
     </div>
     <div class="note-row"><input id="dNote" placeholder="Add a note, e.g. called and spoke to Sarah, proposal due Friday"><button class="btn ghost sm" id="dAddNote">Add note</button></div>
     <div id="dHistory">${historyHtml(v.outreach.history)}</div>`;
@@ -342,7 +306,7 @@ function openDetails(v) {
       (p.length > 1 ? `<div class="thumbs" style="margin-top:8px">${p.slice(1).map((u) => `<a href="${esc(u)}" target="_blank" rel="noopener">${imgTag(u, v.name + ' photo')}</a>`).join('')}</div>` : '');
   });
   $('[data-close]', dlg).onclick = () => dlg.close();
-  $('#dCompose').onclick = () => { dlg.close(); openCompose(v); };
+  $('#dCompose').onclick = () => { dlg.close(); emailViaGmail(v); };
   $('#dStatus').onchange = async (e) => {
     try {
       const r = await api(`/api/outreach/${encodeURIComponent(v.id)}`, { method: 'POST', body: { status: e.target.value } });
@@ -395,7 +359,7 @@ $('#grid').addEventListener('click', (e) => {
   const id = e.target.closest('.card')?.dataset.id;
   const v = venues.find((x) => x.id === id);
   if (!v || !action) return;
-  if (action === 'compose') openCompose(v);
+  if (action === 'gmail') emailViaGmail(v);
   else openDetails(v);
 });
 $('#statusFilter').addEventListener('click', (e) => {
@@ -408,8 +372,7 @@ $('#search').addEventListener('input', (e) => { query = e.target.value; renderGr
 
 (async function init() {
   try {
-    [config, venues] = await Promise.all([api('/api/config'), api('/api/venues')]);
-    $('#dryRunBanner').hidden = !config.dryRun;
+    venues = await api('/api/venues');
     render();
     const s = loadSettings();
     if (!s.senderName) toast('Tip: add your name and event date under Event details before sending.');

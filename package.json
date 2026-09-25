@@ -2,7 +2,7 @@
   "name": "london-venue",
   "version": "1.0.0",
   "private": true,
-  "description": "London private-dining venue shortlist with one-click RFP emails via Resend and outreach tracking",
+  "description": "London private-dining venue shortlist with one-click prefilled Gmail RFPs and outreach tracking",
   "type": "module",
   "main": "server.js",
   "scripts": {
@@ -17,7 +17,6 @@
     "@upstash/redis": "^1.39.0",
     "@vercel/functions": "^3.9.9",
     "dotenv": "^16.4.5",
-    "express": "^5.2.1",
-    "resend": "^6.29.0"
+    "express": "^5.2.1"
   }
 }

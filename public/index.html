@@ -22,10 +22,7 @@
     <section class="hero">
       <p class="eyebrow">Private event · 15 to 20 guests · London</p>
       <h1>Venue <em>shortlist</em></h1>
-      <p class="lede">Send each restaurant a prefilled RFP in one click and see who you have already contacted.</p>
-      <div id="dryRunBanner" class="banner" hidden>
-        Dry run mode: no <code>RESEND_API_KEY</code> is set, so emails are logged but not sent.
-      </div>
+      <p class="lede">Open a prefilled RFP in Gmail in one click and see who you have already contacted.</p>
     </section>
 
     <section class="stats" id="stats" aria-label="Outreach summary"></section>
@@ -33,34 +30,10 @@
     <section class="toolbar">
       <input type="search" id="search" placeholder="Search venues, areas, cuisine" aria-label="Search venues">
       <div class="chips" id="statusFilter" role="tablist" aria-label="Filter by status"></div>
-      <button class="btn primary" id="bulkBtn" type="button">Send to all not contacted</button>
     </section>
 
     <section class="grid" id="grid" aria-live="polite"></section>
   </main>
-
-  <!-- Compose -->
-  <dialog id="composeDlg" class="dlg">
-    <form method="dialog" class="dlg-body" id="composeForm">
-      <header class="dlg-head">
-        <div>
-          <p class="eyebrow" id="composeVenue"></p>
-          <h2>Send RFP</h2>
-        </div>
-        <button class="icon-btn" value="cancel" aria-label="Close">✕</button>
-      </header>
-      <label>To <input id="cTo" type="text" required></label>
-      <p class="hint" id="cToHint"></p>
-      <label>Subject <input id="cSubject" type="text" required></label>
-      <label>Message <textarea id="cBody" rows="16" required></textarea></label>
-      <p class="hint">From <span id="cFrom"></span></p>
-      <footer class="dlg-foot">
-        <span class="err" id="cErr" role="alert"></span>
-        <button class="btn ghost" value="cancel">Cancel</button>
-        <button class="btn primary" id="cSend" type="button">Send email</button>
-      </footer>
-    </form>
-  </dialog>
 
   <!-- Venue details -->
   <dialog id="detailDlg" class="dlg wide">
@@ -81,6 +54,7 @@
         <label>Your name <input name="senderName"></label>
         <label>Your title <input name="senderTitle"></label>
         <label>Phone <input name="senderPhone"></label>
+        <label>Gmail account to send from <input name="gmailAccount" type="email" placeholder="you@impactanalytics.co"></label>
         <label>Guest count <input name="guests"></label>
         <label>Preferred date <input name="date" placeholder="e.g. Thursday 12 November 2026"></label>
         <label>Alternative dates <input name="altDates"></label>
