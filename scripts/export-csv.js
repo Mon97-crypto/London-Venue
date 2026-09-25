@@ -7,8 +7,8 @@ const COLUMNS = [
   ['Email Notes', 'email_note'], ['Email Source', 'email_sources'], ['Phone', 'phone'],
   ['Cuisine', 'cuisine'], ['Michelin / Accolades', 'michelin'], ['Chef', 'chef'],
   ['Speciality', 'speciality'], ['Signature Dishes', 'signature_dishes'], ['Menu URL', 'menu_url'],
-  ['Menu Summary', 'menu_summary'], ['Price Range', 'price_range'], ['Private Dining', 'private_dining'],
-  ['Seated Capacity', 'capacity_seated'], ['Standing Capacity', 'capacity_standing'],
+  ['Menu Summary', 'menu_summary'], ['Price Range', 'price_range'], ['Price Min (£pp)', 'price_min'], ['Price Max (£pp)', 'price_max'], ['Popularity (0-100)', 'popularity'], ['Private Dining', 'private_dining'],
+  ['Seated Capacity', 'capacity_seated'], ['Min Guests', 'capacity_min'], ['Max Guests', 'capacity_max'], ['Standing Capacity', 'capacity_standing'],
   ['Fits 15-20?', 'fit_15_20'], ['Instagram', 'instagram'], ['Cover Image', 'cover_image'],
   ['Photos', 'photos'], ['Notes', 'notes'],
 ];

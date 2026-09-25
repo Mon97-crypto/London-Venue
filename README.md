@@ -25,10 +25,22 @@ npm start                 # http://localhost:3000
 ## Using the app
 
 - **Customise email** (optional): add your name, title, phone, the Gmail account to send from, date, timing and budget. Blank fields fall back to neutral wording, so the Gmail button always works. Edit the subject and body template here. Placeholders such as `{{venue}}` and `{{room}}` are filled in per venue. These settings are stored in your browser.
-- **Email via Gmail** on a card opens a new Gmail tab with the recipient, subject and RFP body filled in. Review it and press Send in Gmail. The venue moves to *Contacted* and the draft is logged. The app cannot see whether you pressed Send, so if you close the draft, set the status back in Details.
-- The **Gmail account** setting picks which signed-in Google account opens the draft, useful if you are signed in to more than one.
-- **Details** shows the full venue profile, photos, outreach history and a status picker (Contacted, Replied, Shortlisted, Declined, Booked). Add notes such as phone calls.
-- Filter chips and search narrow the grid. The stats bar shows progress.
+- **Email via Gmail** on a card opens a new Gmail tab with the recipient, subject and RFP body filled in. The tracker and the card update straight away (*Contacted*).
+- **Mark sent** confirms you pressed Send in Gmail. The card turns green with a *Sent* ribbon. Click again to undo.
+- **♥ Favourite** any venue, then filter by *Favourites*.
+- **Bulk RFP** (toolbar) switches on selection. Tick venues, or use *Select favourites* / *Select not contacted*, then:
+  - **One Gmail to all (BCC)**: a single draft with every selected venue in BCC and neutral wording ("Hello," instead of the venue name).
+  - **Personalised, one by one**: steps through the selection, opening a personalised Gmail draft for each venue.
+  - **Mark all sent** once you have sent them.
+- **Sort** by most popular, price (high to low or low to high), Michelin stars, largest groups or name.
+- **Filters**: Michelin stars, guests to host (min and max, with a 15 to 20 shortcut) and max price per head.
+- **Details** shows the full venue profile, photos, outreach history, a status picker (Contacted, Replied, Shortlisted, Declined, Booked) and notes.
+- The **Gmail account** setting under *Customise email* picks which signed-in Google account opens the draft.
+- Press `/` to jump to search.
+
+Tracking is saved on the server (Upstash Redis on Vercel). If the server cannot save, for example before Redis is connected, changes are kept in your browser, a note appears in the progress card, and they are sent to the server on your next visit.
+
+"Most popular" is an editorial ranking in `venues.json` (`popularity`, 0 to 100) based on Michelin stars, World's 50 Best listings and profile. Guest ranges (`capacity_min`, `capacity_max`) and prices (`price_min`, `price_max`, £ per head for food) are also there; blank capacity means the venue does not publish it, and such venues stay in guest-filtered results.
 
 ### Photos
 

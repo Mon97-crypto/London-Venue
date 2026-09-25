@@ -36,9 +36,56 @@
     <div class="wrap toolbar">
       <label class="search">
         <svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input type="search" id="search" placeholder="Search by name, area, cuisine or chef" aria-label="Search venues">
+        <input type="search" id="search" placeholder="Search by name, area, cuisine or chef  ( / )" aria-label="Search venues">
       </label>
+      <label class="select">
+        <span>Sort</span>
+        <select id="sort" aria-label="Sort venues">
+          <option value="popular">Most popular</option>
+          <option value="price-desc">Price: high to low</option>
+          <option value="price-asc">Price: low to high</option>
+          <option value="stars">Michelin stars</option>
+          <option value="capacity">Largest groups</option>
+          <option value="name">A to Z</option>
+        </select>
+      </label>
+      <button class="btn ghost" id="filterToggle" type="button" aria-expanded="false" aria-controls="filterPanel">
+        <svg class="i" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+        Filters <span class="count" id="filterCount" hidden></span>
+      </button>
+      <button class="btn primary" id="bulkToggle" type="button">
+        <svg class="i" viewBox="0 0 24 24"><path d="M21 3 10 14M21 3l-7 18-4-7-7-4Z"/></svg>
+        Bulk RFP
+      </button>
+    </div>
+    <div class="wrap filter-panel" id="filterPanel" hidden>
+      <div class="fgroup">
+        <span class="flabel">Michelin stars</span>
+        <div class="seg" id="starFilter">
+          <button type="button" data-stars="0" aria-pressed="true">Any</button>
+          <button type="button" data-stars="1" aria-pressed="false">&#10033; 1</button>
+          <button type="button" data-stars="2" aria-pressed="false">&#10033;&#10033; 2</button>
+          <button type="button" data-stars="3" aria-pressed="false">&#10033;&#10033;&#10033; 3</button>
+        </div>
+      </div>
+      <div class="fgroup">
+        <span class="flabel">Guests to host</span>
+        <div class="range-inputs">
+          <input type="number" id="guestMin" min="1" max="200" placeholder="Min" aria-label="Minimum guests">
+          <span>to</span>
+          <input type="number" id="guestMax" min="1" max="200" placeholder="Max" aria-label="Maximum guests">
+          <button type="button" class="chip" id="guestPreset">15 to 20</button>
+        </div>
+      </div>
+      <div class="fgroup">
+        <span class="flabel">Max price per head <b id="priceOut">Any</b></span>
+        <input type="range" id="priceMax" min="50" max="300" step="10" value="300" aria-label="Maximum price per head">
+      </div>
+      <button type="button" class="link-btn" id="clearFilters">Clear all</button>
+    </div>
+    <div class="wrap chip-row">
       <div class="chips" id="statusFilter" role="tablist" aria-label="Filter by status"></div>
+      <span class="result-count" id="resultCount"></span>
     </div>
   </div>
 
@@ -49,6 +96,22 @@
   <footer class="wrap foot">
     Emails open in Gmail for you to review and send. Venue details come from each restaurant's official website.
   </footer>
+
+  <!-- Bulk actions -->
+  <div class="bulk-bar" id="bulkBar" hidden>
+    <div class="bulk-inner">
+      <div class="bulk-info">
+        <b id="bulkCount">0 selected</b>
+        <div class="bulk-quick">
+          <button type="button" class="link-btn" data-select="favourites">Select favourites</button>
+          <button type="button" class="link-btn" data-select="not_contacted">Select not contacted</button>
+          <button type="button" class="link-btn" data-select="none">Clear</button>
+        </div>
+      </div>
+      <div class="bulk-actions" id="bulkActions"></div>
+      <button class="icon-btn bulk-close" id="bulkClose" type="button" aria-label="Close bulk mode"><svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+  </div>
 
   <!-- Venue details -->
   <dialog id="detailDlg" class="sheet">
