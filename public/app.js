@@ -302,7 +302,7 @@ function photosFor(v) {
   if (!photoCache.has(v.id)) {
     photoCache.set(
       v.id,
-      api(`/api/photos/${encodeURIComponent(v.id)}`)
+      api(`/api/photos/${encodeURIComponent(v.id)}?v=2`)
         .then((r) => r.photos)
         .catch(() => [])
         .then((p) => (p.length ? p : v.website ? [microlink(v.website)] : [])),
@@ -581,6 +581,7 @@ function drawDetails() {
     <div class="sheet-hero" id="dHero">
       <div class="monogram">${esc(initials(v.name))}</div>
       <button class="icon-btn close" data-close aria-label="Close">${icon('x')}</button>
+      <button type="button" class="cover-pick" data-d="cover-pick" hidden>${icon('image')}Use as cover</button>
       <div class="title"><h2>${esc(v.name)}</h2><p>${esc(v.address)}</p></div>
     </div>
     <div class="thumbs" id="dThumbs"></div>
@@ -654,17 +655,34 @@ function drawDetails() {
       </div>
     </div>`;
 
-  photosFor(v).then(async (urls) => {
+  // Gallery: every photo found for the venue (ignoring a chosen cover), so any can become the cover.
+  const galleryFor = () => {
+    const curated = [v.cover_image, ...(v.photos || [])].filter(Boolean);
+    if (curated.length) return Promise.resolve(curated);
+    const tmp = { ...v, outreach: { ...v.outreach, cover: undefined } };
+    return photosFor(tmp);
+  };
+  Promise.all([photosFor(v), galleryFor()]).then(async ([heroUrls, gallery]) => {
     const hero = $('#dHero');
     if (!hero) return;
+    const pick = $('[data-d=cover-pick]', hero);
+    const showPick = (url) => {
+      pick.hidden = !url || url === v.outreach.cover || (!v.outreach.cover && url === loadedSrc.get(v.id));
+      pick.dataset.url = url || '';
+    };
     const known = loadedSrc.get(v.id);
-    await loadInto(hero, known ? [known, ...urls] : urls, v.name);
+    const img = await loadInto(hero, known ? [known, ...heroUrls] : heroUrls, v.name);
+    showPick(img?.src);
+    const all = [...new Set([v.outreach.cover, ...gallery].filter(Boolean))];
     const thumbs = $('#dThumbs');
-    if (urls.length > 1 && thumbs) {
-      thumbs.innerHTML = urls.map((u, i) => `<img src="${esc(u)}" alt="" referrerpolicy="no-referrer" data-i="${i}" onerror="this.remove()">`).join('');
-      thumbs.onclick = (e) => {
+    if (all.length > 1 && thumbs) {
+      thumbs.innerHTML = all.map((u, i) => `<img src="${esc(u)}" alt="" referrerpolicy="no-referrer" data-i="${i}" onerror="this.remove()">`).join('');
+      thumbs.onclick = async (e) => {
         const i = e.target.dataset?.i;
-        if (i !== undefined) loadInto(hero, [urls[i]], v.name);
+        if (i === undefined) return;
+        for (const t of thumbs.children) t.classList.toggle('active', t === e.target);
+        const shown = await loadInto(hero, [all[i]], v.name);
+        showPick(shown ? all[i] : null);
       };
     }
   });
@@ -685,6 +703,14 @@ $('#detailDlg').addEventListener('click', (e) => {
   if (d === 'gmail') return setTimeout(() => { emailOne(v); drawDetails(); });
   if (d === 'sent') toggleSent(v);
   if (d === 'fav') toggleFav(v);
+  if (d === 'cover-pick') {
+    const url = e.target.closest('[data-d]').dataset.url;
+    if (url) {
+      loadedSrc.set(v.id, url);
+      change(v, (en) => { en.cover = url; });
+      toast('Cover photo updated for everyone');
+    }
+  }
   const st = e.target.closest('[data-status]')?.dataset.status;
   if (st && st !== v.outreach.status) {
     change(v, (en, at) => {

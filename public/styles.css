@@ -319,3 +319,6 @@ body.has-bulk .toast { bottom: 130px; }
 .local-note [data-reason] { flex: 1 1 100%; }
 .local-note a { color: #fff; text-decoration: underline; font-size: 12px; }
 .local-note[hidden] { display: none; }
+.cover-pick { position: absolute; left: 14px; top: 14px; z-index: 3; display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 999px; background: rgba(255, 255, 255, .95); color: var(--ink); padding: 8px 14px; font-size: 13px; font-weight: 500; cursor: pointer; box-shadow: 0 4px 14px rgba(0, 0, 0, .2); }
+.cover-pick:hover { background: #fff; }
+.cover-pick[hidden] { display: none; }

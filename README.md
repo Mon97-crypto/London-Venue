@@ -47,9 +47,9 @@ Tracking is saved on the server (Upstash Redis on Vercel). If the server cannot 
 
 Each card tries these in order and shows the first photo that loads:
 
-1. A cover photo you paste in a venue's **Details → Cover photo** (saved for everyone).
+1. A cover photo you choose: open **Details**, click a gallery thumbnail and press **Use as cover**, or paste an image URL under **Cover photo** (saved for everyone).
 2. `cover_image` / `photos` in `venues.json`.
-3. Photos the server reads from the venue's own website (`og:image` plus large images), cached for a week.
+3. Photos the server reads from the venue's home page and private dining page, ranked so room and food shots come first. Maps, floor plans, logos and award badges are skipped. Cached for a week.
 4. The website's share image through [Microlink](https://microlink.io), straight from the browser.
 
 If none loads, the card shows the venue's initials.
