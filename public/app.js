@@ -17,33 +17,45 @@ const DEFAULT_SETTINGS = {
   timing: 'Evening, from around 7pm',
   budget: '',
   subject: 'Private dining enquiry for {{guests}} guests | Impact Analytics',
-  body: `Dear {{venue}} team,
+  body: `Hello {{venue}} events team,
 
-I am reaching out from Impact Analytics, an AI-powered retail analytics company. We are planning a private dinner in London for {{guests}} guests and would love to host it at {{venue}}.
+I'm writing from Impact Analytics about a private event we're planning in London:
 
-Event details:
-- Group size: {{guests}} guests
-- Date: {{date}}
-- Timing: {{timing}}
-- Format: seated private dinner, ideally in {{room}}
-- Budget: {{budget}}
+* Event: Seated dinner in a private space, opening with cocktails
+* Guests: 15–20
+* Space: Private dining room + terrace
+* Group: Senior Executives
 
-Could you please let us know:
-1. Whether you can host a group of {{guests}} in a private or semi-private space
-2. Your group menus (set or tasting) and price per head, including wine pairing or drinks packages
-3. Any minimum spend, room hire fee, service charge and deposit terms
-4. Whether we can use a screen or say a few words of welcome during the evening
+Could you please get back to me on the following?
+1. Availability on the date and times above
+2. Which room you'd put us in, whether it's fully private, and what else would be running alongside it
+3. Confirmation that the space seats this many guests comfortably in this format, not at capacity
+4. The food & beverage minimum for that space on that date
+5. Food and drink formats you'd recommend at this headcount
+6. Beverage packages, including a substantial non-alcoholic selection
+7. Dietary accommodation — expect vegetarian, vegan, halal, and gluten-free guests
+8. All other charges — room/facility fee, service charge, administrative fee, tax, staffing, coat check, AV, overtime — so we can compare venues on a genuine all-in figure
+9. Deposit schedule, payment terms, and cancellation policy
 
-We would be grateful for a proposal at your earliest convenience. Happy to jump on a call if that is easier.
+If that date is already committed, I'd still welcome the minimum and fee structure — we have some flexibility. A PDF pack or a call both work, whichever is easier for you.
 
-Kind regards,
-{{senderName}}
-{{senderTitle}}
-Impact Analytics
-{{senderPhone}}`,
+Best regards,
+Garvit Sindhwani
+Impact Analytics`,
 };
 
-const SETTINGS_KEY = 'london-venue-settings-v2';
+const SETTINGS_KEY = 'london-venue-settings-v3';
+// Carry personal details over from the previous version, but not its old email wording.
+(function migrateSettings() {
+  try {
+    if (localStorage.getItem(SETTINGS_KEY)) return;
+    const old = JSON.parse(localStorage.getItem('london-venue-settings-v2') || 'null');
+    if (!old) return;
+    delete old.subject;
+    delete old.body;
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(old));
+  } catch { /* storage unavailable */ }
+})();
 const LOCAL_KEY = 'london-venue-outreach-v1';
 const $ = (sel, root = document) => root.querySelector(sel);
 
@@ -152,7 +164,7 @@ function gmailUrl(v) {
 function bulkGmailUrl(list) {
   const s = loadSettings();
   const generic = { name: 'your restaurant', room: 'a private dining room' };
-  const body = fill(s.body.replace(/Dear \{\{venue\}\} team,/, 'Hello,'), generic, s);
+  const body = fill(s.body.replace(/^(Hello|Dear|Hi) \{\{venue\}\}[^\n]*,/, 'Hello,'), generic, s);
   const bcc = [...new Set(list.flatMap((v) => recipientFor(v).split(',')).map((e) => e.trim()).filter(Boolean))].join(',');
   return gmailLink({ bcc, subject: fill(s.subject, generic, s), body });
 }
