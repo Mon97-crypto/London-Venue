@@ -5,16 +5,11 @@ import express from 'express';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import app from './lib/app.js';
-import { isAuthorized, AUTH_CHALLENGE } from './lib/auth.js';
 import { storeKind } from './lib/store.js';
 
 const PORT = process.env.PORT || 3000;
 const server = express();
 
-server.use((req, res, next) => {
-  if (isAuthorized(req.headers.authorization)) return next();
-  res.status(AUTH_CHALLENGE.status).set(AUTH_CHALLENGE.headers).send('Password required');
-});
 server.use(express.static(path.join(path.dirname(fileURLToPath(import.meta.url)), 'public')));
 server.use(app);
 

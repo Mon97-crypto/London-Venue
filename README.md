@@ -11,7 +11,7 @@ A small web app for Impact Analytics to shortlist London restaurants for a priva
 | `lib/app.js` | The API: venue list, outreach tracking, photo lookup |
 | `lib/store.js` | Storage: Upstash Redis when configured, JSON files otherwise |
 | `server.js` | Local server (`npm start`) |
-| `api/index.js`, `middleware.js`, `vercel.json` | Vercel function entry, password protection, routing |
+| `api/index.js`, `vercel.json` | Vercel function entry and routing |
 | `public/` | The web app (no build step) |
 | `data/outreach.json` | Local only. Stores status and history per venue (git-ignored); Vercel uses Redis |
 
@@ -43,15 +43,13 @@ Cover images come from `cover_image` / `photos` in `venues.json` if set. Otherwi
 
 ## Deploy to Vercel
 
-The repo is ready for Vercel: `public/` is served as static files, `api/index.js` runs the API as a serverless function, and `middleware.js` puts a password in front of everything.
+The repo is ready for Vercel: `public/` is served as static files and `api/index.js` runs the API as a serverless function.
 
 1. In Vercel, click **Add New → Project** and import `mon97-crypto/london-venue`. Keep the defaults (Framework preset: Other). `vercel.json` sets the rest.
 2. **Storage → Create → Upstash (Redis)** from the Vercel Marketplace, and connect it to the project. Choose the free plan. This adds `KV_REST_API_URL` and `KV_REST_API_TOKEN` automatically. Vercel's filesystem is read-only, so without Redis the app cannot save outreach tracking.
-3. **Settings → Environment Variables**, add:
-   - `APP_PASSWORD`: the password your team will type. Without it, anyone with the URL can see and change your outreach tracking.
-4. **Deployments → Redeploy** so the new variables take effect.
+3. **Deployments → Redeploy** so the Redis variables take effect.
 
-When you open the site, the browser asks for a username and password. Any username works; the password is `APP_PASSWORD`.
+The site has no login, so anyone with the URL can see the list and change statuses. Keep the URL within the team.
 
 To deploy from your own terminal instead: `npm i -g vercel`, then `vercel` in the repo folder, then `vercel --prod`.
 
