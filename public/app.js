@@ -221,6 +221,34 @@ async function persist(v) {
   }
 }
 
+// Explain in plain words why saving failed, using /api/health.
+let diagnosing = false;
+async function diagnose() {
+  if (diagnosing) return;
+  diagnosing = true;
+  let reason;
+  try {
+    const h = await api('/api/health');
+    if (h.store === 'redis' && h.ok) reason = 'The database is working now. Click Retry sync to upload what was saved in this browser.';
+    else if (h.store === 'redis') reason = `The server found the database but could not use it (${h.error}). Check the Upstash database in Vercel → Storage.`;
+    else if (h.onVercel && h.envNames.length) reason = `The server has database settings (${h.envNames.join(', ')}) but none it can use. It needs the REST URL and token (…KV_REST_API_URL and …KV_REST_API_TOKEN).`;
+    else if (h.onVercel) reason = 'This deployment has no database settings. In Vercel, open Deployments and Redeploy the latest one so it picks up the Upstash connection.';
+    else reason = `The server could not save (${h.error || 'unknown error'}).`;
+  } catch {
+    reason = 'Could not reach the server to check why.';
+  }
+  const el = document.querySelector('.local-note [data-reason]');
+  if (el) el.textContent = `Tracking is saved in this browser only. ${reason}`;
+  diagnosing = false;
+}
+
+async function retrySync() {
+  const pending = venues.filter((v) => readJSON(LOCAL_KEY, {})[v.id]);
+  await Promise.all(pending.map(persist));
+  if (!state.localOnly) toast(`Synced ${pending.length} venue${pending.length === 1 ? '' : 's'} to the server. Tracking is now shared.`);
+  else { toast('Still could not save to the server. See the note for why.'); diagnose(); }
+}
+
 function markEmailed(v, to, subject, type = 'email') {
   return change(v, (e, at) => {
     if (e.status === 'not_contacted') e.status = 'contacted';
@@ -384,7 +412,11 @@ function renderProgress() {
         <div><b data-n="booked">0</b><span>Booked</span></div>
         <div><b data-n="todo">0</b><span>To contact</span></div>
       </div>
-      <div class="local-note" hidden>Tracking is saved in this browser only. Connect Upstash Redis in Vercel to share it with the team.</div>`;
+      <div class="local-note" hidden>
+        <div data-reason>Tracking is saved in this browser only, because the server could not save it.</div>
+        <button type="button" class="reset-btn" id="retrySync">${icon('reset')}Retry sync</button>
+        <a href="/api/health" target="_blank" rel="noopener">Check server</a>
+      </div>`;
   }
   animateNumber($('[data-n=reached]', box), reached);
   animateNumber($('[data-n=sent]', box), sent);
@@ -393,6 +425,7 @@ function renderProgress() {
   animateNumber($('[data-n=todo]', box), venues.length - reached);
   $('.bar span', box).style.width = `${pct}%`;
   $('.local-note', box).hidden = !state.localOnly;
+  if (state.localOnly) diagnose();
 }
 
 function renderChips() {
@@ -842,6 +875,7 @@ function bulkAction(action, sel) {
 
 // Reset: clears outreach progress for every venue but keeps favourites and cover photos.
 $('#progress').addEventListener('click', async (e) => {
+  if (e.target.closest('#retrySync')) return retrySync();
   if (!e.target.closest('#resetTracking')) return;
   const touched = venues.filter((v) => v.outreach.status !== 'not_contacted' || v.outreach.sentAt || v.outreach.history.length);
   if (!touched.length) return toast('Nothing to reset yet.');
