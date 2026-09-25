@@ -1,0 +1,19 @@
+{
+  "name": "london-venue",
+  "version": "1.0.0",
+  "private": true,
+  "description": "London private-dining venue shortlist with one-click RFP emails via Resend and outreach tracking",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "csv": "node scripts/export-csv.js"
+  },
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^5.2.1",
+    "resend": "^6.29.0"
+  }
+}
